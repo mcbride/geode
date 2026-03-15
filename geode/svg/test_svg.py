@@ -185,7 +185,7 @@ def svg_test(name,svg,known):
   beziers = svgstring_to_beziers(svg)
   sig = [rint(b.evaluate(4)).astype(int) for b in beziers]
   if not approx_equal(sig,known) or '-dd' in sys.argv:
-    print 'sig = %s'%compact_str(sig)
+    print('sig = %s'%compact_str(sig))
     if '-d' in sys.argv or '-dd' in sys.argv:
       import pylab
       for bezier in beziers:

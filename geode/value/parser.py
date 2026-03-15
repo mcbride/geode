@@ -19,14 +19,14 @@ def try_autocomplete(props):
     exit(0)
   if len(sys.argv) != 4 or sys.argv[1] != "--autocomplete": return
 
-  print "Autocomplete requested for %s" % sys.argv
+  print("Autocomplete requested for %s" % sys.argv)
   prev = sys.argv[2]
   curr = sys.argv[3]
 
   if len(prev) > 2 and prev[:2] == "--": prev = prev[2:]
   prev = prev.replace('-','_')
 
-  print "prev: %s" % prev
+  print("prev: %s" % prev)
   items = props.items
   if prev in items:
     prop = items[prev]
@@ -213,7 +213,7 @@ def command(props,drop_defaults=True):
         else:
           args.extend(['--'+fix_name(name),v])
     except NotImplementedError:
-      print 'Warning: Could not convert property %s, command line may be incomplete.' % name.replace('_','-')
+      print('Warning: Could not convert property %s, command line may be incomplete.' % name.replace('_','-'))
 
   def escape(s):
     if ' ' in s or s=='':

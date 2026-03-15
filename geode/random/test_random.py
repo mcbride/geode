@@ -11,7 +11,7 @@ def test_sobol(filename=None):
   m,n = 128,128
   box = Box(0,(m,n,m))
   sobol = Sobol(box)
-  print box
+  print(box)
 
   im = tile(1,(m,n,3)).astype(uint8)
   count = m*n//100*10
@@ -82,7 +82,7 @@ def test_bits():
   gamma = 0.5772156649015328606065120900824024310421
   expected = sqrt(2*log(m)-log(4*pi*log(m)-2*pi*log(2*pi)))*(1+gamma/log(m))
   min,max = X.min(),X.max()
-  print 'n = %d, m = %d, expected extreme = %g, error range = %g %g'%(n,m,expected,min,max)
+  print('n = %d, m = %d, expected extreme = %g, error range = %g %g'%(n,m,expected,min,max))
   for e in -min,max:
     assert relative_error(expected,e)<.1
 
@@ -97,13 +97,13 @@ def test_distributions():
     cdf = dist.cdf(cuts)
     expected = n*(cdf[1:]-cdf[:-1])
     chi2,p = scipy.stats.chisquare(observed,expected)
-    print '%s: chi^2 = %g, p = %g'%(name,chi2,p)
+    print('%s: chi^2 = %g, p = %g'%(name,chi2,p))
     assert p>.4
     # Check independence of adjacent entries
     if 'chi2_contingency' in dir(scipy.stats):
       observed = histogram2d(X[:-1],X[1:],cuts)[0]
       chi2,p,_,_ = scipy.stats.chi2_contingency(observed)
-      print '%s independence: chi^2 = %g, p = %g'%(name,chi2,p)
+      print('%s independence: chi^2 = %g, p = %g'%(name,chi2,p))
       assert p>.4
   # Test normal
   test('normal',scipy.stats.norm,arange(-3,3.001,.03),random.normal(n))

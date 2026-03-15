@@ -147,7 +147,7 @@ def warn_unknown(type):
     elif type in leaf_parsers:
       raise IOError("Nonleaf atom has leaf type '%s'"%type)
     else:
-      print>>sys.stderr, "warning: unknown atom type '%s'"%type
+      print("warning: unknown atom type '%s'"%type, file=sys.stderr)
       already_warned.add(type)
 
 def read_uint(file):

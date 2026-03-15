@@ -231,12 +231,12 @@ if __name__ == "__main__":
   ct.track('b', var_b)
   ct.track('sum', var_sum)
 
-  print "updates: %s" % str(ct.pull())
-  print "setting 'a' to 5"
+  print("updates: %s" % str(ct.pull()))
+  print("setting 'a' to 5")
   var_a.set(5)
-  print "updates: %s" % str(ct.pull())
-  print "setting 'b' to 12"
+  print("updates: %s" % str(ct.pull()))
+  print("setting 'b' to 12")
   var_b.set(12)
-  print "updates: %s" % str(ct.pull())
+  print("updates: %s" % str(ct.pull()))
   ct.refresh()
-  print "refresh: %s" % str(ct.pull())
+  print("refresh: %s" % str(ct.pull()))

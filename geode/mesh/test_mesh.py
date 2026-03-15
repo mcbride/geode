@@ -33,8 +33,8 @@ def test_bad():
 def test_incident_segments():
   mesh = SegmentSoup([(0,1),(0,2)])
   incident = mesh.incident_elements()
-  print incident.offsets
-  print incident.flat
+  print(incident.offsets)
+  print(incident.flat)
   incident = map(list,mesh.incident_elements())
   assert incident==[[0,1],[0],[1]]
 

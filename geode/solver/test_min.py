@@ -38,14 +38,15 @@ def test_powell():
     x = zeros(2)
     tol = 1e-4
     fx,i = powell(f,x,.1,tol,tol,100)
-    print 'x = %s, fx = %g, iters = %d, evals = %d'%(x,fx,i,evals[0])
+    print('x = %s, fx = %g, iters = %d, evals = %d'%(x,fx,i,evals[0]))
     xc = (-0.87892353,0.89360935) if tweak else (-.5,.75)
     fc = 1.34897 if tweak else 13/8
     assert maxabs(x-xc)<2*tol
     assert abs(fx-fc)<tol
 
 def test_nelder_mead():
-  def f((x,y)):
+  def f(xy):
+    x, y = xy
     return abs((3-2*x)*x-2*y+1)**(7/3) + abs((3-2*y)*y-x+1)**(7/3)
   x = nelder_mead.optimize(f,(-.9,-1),.3,1e-5,verbose=1)
   assert f(x) < 1e-9

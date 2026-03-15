@@ -91,9 +91,9 @@ def optimize(f,x0,step0,tolerance,verbose=False):
     x,done = gen.send(fx)
     if done:
       if verbose:
-        print 'converged: x = %s'%x
+        print('converged: x = %s'%x)
       return x
     else:
       fx = f(x)
       if verbose:
-        print 'f(%s) = %g'%(x,fx)
+        print('f(%s) = %g'%(x,fx))
