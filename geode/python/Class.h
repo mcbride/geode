@@ -57,46 +57,16 @@ GEODE_CORE_EXPORT void add_descriptor(PyTypeObject* type,const char* name,PyObje
 // Should appear in the .cpp to define the fields declared by GEODE_DECLARE_TYPE(GEODE_SOMETHING_EXPORT)
 #define GEODE_DEFINE_TYPE(...) \
   PyTypeObject __VA_ARGS__::pytype = { \
-    PyObject_HEAD_INIT(&PyType_Type) \
-    0,                                           /* ob_size */\
-    "geode_default_name:" __FILE__ ":" #__VA_ARGS__, /* tp_name */\
-    sizeof(geode::PyObject)+sizeof(__VA_ARGS__), /* tp_basicsize */\
-    0,                                           /* tp_itemsize */\
-    geode::Class<__VA_ARGS__>::dealloc,          /* tp_dealloc */\
-    0,                                           /* tp_print */\
-    0,                                           /* tp_getattr */\
-    0,                                           /* tp_setattr */\
-    0,                                           /* tp_compare */\
-    0,                                           /* tp_repr */\
-    0,                                           /* tp_as_number */\
-    0,                                           /* tp_as_sequence */\
-    0,                                           /* tp_as_mapping */\
-    0,                                           /* tp_hash  */\
-    0,                                           /* tp_call */\
-    0,                                           /* tp_str */\
-    0,                                           /* tp_getattro */\
-    0,                                           /* tp_setattro */\
-    0,                                           /* tp_as_buffer */\
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,    /* tp_flags */\
-    "Wrapped C++ class",                         /* tp_doc */\
-    0,                                           /* tp_traverse */\
-    0,                                           /* tp_clear */\
-    0,                                           /* tp_richcompare */\
-    0,                                           /* tp_weaklistoffset */\
-    0,                                           /* tp_iter */\
-    0,                                           /* tp_iternext */\
-    0,                                           /* tp_methods */\
-    0,                                           /* tp_members */\
-    0,                                           /* tp_getset */\
-    GEODE_BASE_PYTYPE(__VA_ARGS__),              /* tp_base */\
-    0,                                           /* tp_dict */\
-    0,                                           /* tp_descr_get */\
-    0,                                           /* tp_descr_set */\
-    0,                                           /* tp_dictoffset */\
-    geode::trivial_init,                         /* tp_init */\
-    geode::simple_alloc,                         /* tp_alloc */\
-    0,                                           /* tp_new */\
-    free,                                        /* tp_free */\
+    PyVarObject_HEAD_INIT(&PyType_Type, 0) \
+    .tp_name = "geode_default_name:" __FILE__ ":" #__VA_ARGS__, \
+    .tp_basicsize = sizeof(geode::PyObject)+sizeof(__VA_ARGS__), \
+    .tp_dealloc = geode::Class<__VA_ARGS__>::dealloc, \
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, \
+    .tp_doc = "Wrapped C++ class", \
+    .tp_base = GEODE_BASE_PYTYPE(__VA_ARGS__), \
+    .tp_init = geode::trivial_init, \
+    .tp_alloc = geode::simple_alloc, \
+    .tp_free = free, \
   };
 
 template<class T> static PyObject* str_wrapper(PyObject* self) {
@@ -130,8 +100,6 @@ public:
     : ClassBase(name,visible,&T::pytype,(char*)(typename T::Base*)(T*)1-(char*)(T*)1)
   {
     type->tp_weaklistoffset = WeakRef_Helper<T>::offset();
-    if (type->tp_weaklistoffset)
-      type->tp_flags |= Py_TPFLAGS_HAVE_WEAKREFS;
   }
 
 #ifdef GEODE_VARIADIC
@@ -163,7 +131,6 @@ public:
     if (type->tp_iternext || type->tp_iter)
       throw TypeError("Iterator already specified");
 
-    type->tp_flags |= Py_TPFLAGS_HAVE_ITER; // this is included in Py_TPFLAGS_DEFAULT, but just to make sure
     type->tp_iter = wrapped_iter<T>;
     type->tp_iternext = wrapped_iternext_helper<T>::iter;
 
@@ -224,7 +191,7 @@ public:
     WeakRef_Helper<T>::clear_refs(self);
 
     ((T*)(self+1))->~T(); // call destructor
-    self->ob_type->tp_free(self);
+    Py_TYPE(self)->tp_free(self);
   }
 
   Class& call(ternaryfunc call) {
@@ -287,7 +254,7 @@ private:
   }
 
   static bool safe_compare(PyObject* a_, const T& a, const T& b, int op, mpl::false_) {
-    throw TypeError(format("%s has equality but not comparison",a_->ob_type->tp_name));
+    throw TypeError(format("%s has equality but not comparison",Py_TYPE(a_)->tp_name));
   }
 
   static bool safe_compare(PyObject* a_, const T& a, const T& b, int op, mpl::true_) {

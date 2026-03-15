@@ -161,7 +161,9 @@ typedef double real;
 #define GEODE_HAS_CPP11_STD_HEADER(header) 0
 #endif
 
+#if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
 #define GEODE_SSE
+#endif
 #if defined(GEODE_SSE)
   #ifdef _MSC_VER
     #ifdef _M_X64

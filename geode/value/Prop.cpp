@@ -99,11 +99,11 @@ Ref<PropBase> make_prop(const string& n, PyObject* value) {
   // If the value has known simple type, make the corresponding property
   if (PyBool_Check(value))
     return new_<Prop<bool>>(n,from_python<bool>(value));
-  if (PyInt_Check(value))
+  if (PyLong_Check(value))
     return new_<Prop<int>>(n,from_python<int>(value));
   if (PyFloat_Check(value))
     return new_<Prop<double>>(n,from_python<double>(value));
-  if (PyString_Check(value) || PyUnicode_Check(value))
+  if (PyUnicode_Check(value))
     return new_<Prop<string>>(n,from_python<string>(value));
   if (PySequence_Check(value)) {
     if (PyArray_Check(value)) {

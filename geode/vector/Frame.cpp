@@ -31,7 +31,7 @@ static void set_frame_type(PyObject* ft) {
   if (!dtypes) throw_python_error();
   GEODE_ASSERT(PyDict_Check(dtypes));
   for (int d=2;d<=3;d++) {
-    PyObject* dp = PyInt_FromLong(d);
+    PyObject* dp = PyLong_FromLong(d);
     if (!dp) throw_python_error();
     PyObject* dtype = PyDict_GetItem(dtypes,dp);
     Py_DECREF(dp);

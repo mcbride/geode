@@ -1,5 +1,31 @@
 include(CheckCXXCompilerFlag)
 
+# Workaround: on macOS with CommandLineTools, the toolchain's incomplete
+# c++/v1 directory can shadow the SDK's full headers. Detect and fix.
+if(APPLE)
+  execute_process(
+    COMMAND ${CMAKE_CXX_COMPILER} -print-sysroot
+    OUTPUT_VARIABLE _sysroot OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+  if(NOT _sysroot)
+    execute_process(
+      COMMAND xcrun --show-sdk-path
+      OUTPUT_VARIABLE _sysroot OUTPUT_STRIP_TRAILING_WHITESPACE
+      ERROR_QUIET
+    )
+  endif()
+  if(_sysroot AND EXISTS "${_sysroot}/usr/include/c++/v1/cstdint")
+    # Test if the default search path can find cstdint
+    include(CheckIncludeFileCXX)
+    check_include_file_cxx(cstdint _HAS_CSTDINT)
+    if(NOT _HAS_CSTDINT)
+      message(STATUS "Fixing C++ stdlib include path: ${_sysroot}/usr/include/c++/v1")
+      add_compile_options(-nostdinc++ -isystem ${_sysroot}/usr/include/c++/v1)
+    endif()
+  endif()
+endif()
+
 function(add_python_module _name)
   add_library(
     ${_name} MODULE ${ARGN}
@@ -57,7 +83,7 @@ macro(ADD_GEODE_MODULE _name)
 
     set_property(
       TARGET ${_name}
-      PROPERTY CXX_STANDARD 11
+      PROPERTY CXX_STANDARD 17
     )
 
     target_compile_definitions(

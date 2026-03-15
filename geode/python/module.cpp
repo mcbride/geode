@@ -56,10 +56,10 @@ static void import_geode() {
   // On windows, all code is compiled into a single python module, so there's nothing else to import
   return;
 #else
-  char* name = PyModule_GetName(module());
+  const char* name = PyModule_GetName(module());
   if (!name) throw_python_error();
   if (strcmp(name,"geode_wrap")) {
-    PyObject* python_str = PyString_FromString("geode");
+    PyObject* python_str = PyUnicode_FromString("geode");
     if (!python_str) throw_python_error();
     PyObject* python = PyImport_Import(python_str);
     Py_DECREF(python_str);
@@ -69,15 +69,33 @@ static void import_geode() {
 }
 
 void module_push(const char* name) {
-  auto module = Py_InitModule3(name,0,0);
+  static PyMethodDef no_methods[] = {{NULL, NULL, 0, NULL}};
+  static PyModuleDef module_def = {
+    PyModuleDef_HEAD_INIT,
+    NULL,   // m_name -- filled in below
+    NULL,   // m_doc
+    -1,     // m_size (-1 = module keeps state in global vars)
+    no_methods
+  };
+  module_def.m_name = name;
+  auto module = PyModule_Create(&module_def);
   if (!module)
     throw_python_error();
+  // Register in sys.modules so other code can find this module
+  PyObject* sys_modules = PyImport_GetModuleDict();
+  PyDict_SetItemString(sys_modules, name, module);
   modules.push_back(module);
   import_geode();
 }
 
 void module_pop() {
   modules.pop_back();
+}
+
+PyObject* module_peek() {
+  if (modules.empty())
+    throw RuntimeError("No current module");
+  return modules.back();
 }
 
 template<class TC> static TC convert_test(const TC& c) {

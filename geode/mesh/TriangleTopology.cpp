@@ -1953,11 +1953,11 @@ void remove_field_helper(Hashtable<int,int>& id_to_field, vector<UntypedArray>& 
     if (!PyArray_DescrConverter(object,&dtype)) \
       throw_python_error();                          \
     const Ref<> save = steal_ref(*(PyObject*)dtype); \
-    if (!dtype->subarray) \
+    if (!((_PyArray_LegacyDescr*)dtype)->subarray) \
       switch (dtype->type_num) { ADD_FIELDS(prim,0) } \
     else { \
-      const int subtype = dtype->subarray->base->type_num; \
-      const auto shape = from_python<Array<const int>>(dtype->subarray->shape); \
+      const int subtype = ((_PyArray_LegacyDescr*)dtype)->subarray->base->type_num; \
+      const auto shape = from_python<Array<const int>>(((_PyArray_LegacyDescr*)dtype)->subarray->shape); \
       if (shape.size() == 1) { \
         switch (shape[0]) { \
           case 2: switch (subtype) { ADD_FIELDS(prim,2) } break; \

@@ -226,7 +226,7 @@ public:
     {return Vector(geode::min(v1.x,v2.x),geode::min(v1.y,v2.y),geode::min(v1.z,v2.z),geode::min(v1.w,v2.w));}
 
     static Vector componentwise_max(const Vector& v1,const Vector& v2)
-    {return Vector(geode::max(v1.x,v2.x),geode::max(v1.y,v2.y),geode::max(v1.z,v2.z),geode::max(v1.w,v2.zw));}
+    {return Vector(geode::max(v1.x,v2.x),geode::max(v1.y,v2.y),geode::max(v1.z,v2.z),geode::max(v1.w,v2.w));}
 
     Vector projected_on_unit_direction(const Vector& direction) const
     {return dot(*this,direction)*direction;}

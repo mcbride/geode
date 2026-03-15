@@ -23,33 +23,18 @@ struct PythonFunction {
   }
 
   static void dealloc(PyObject* self) {
-    self->ob_type->tp_free(self);
+    Py_TYPE(self)->tp_free(self);
   }
 };
 
 PyTypeObject PythonFunction::pytype = {
-  PyObject_HEAD_INIT(&PyType_Type)
-  0,                       // ob_size
-  "geode.Function",        // tp_name
-  sizeof(PythonFunction),  // tp_basicsize
-  0,                       // tp_itemsize
-  PythonFunction::dealloc, // tp_dealloc
-  0,                       // tp_print
-  0,                       // tp_getattr
-  0,                       // tp_setattr
-  0,                       // tp_compare
-  0,                       // tp_repr
-  0,                       // tp_as_number
-  0,                       // tp_as_sequence
-  0,                       // tp_as_mapping
-  0,                       // tp_hash
-  PythonFunction::call,    // tp_call
-  0,                       // tp_str
-  0,                       // tp_getattro
-  0,                       // tp_setattro
-  0,                       // tp_as_buffer
-  Py_TPFLAGS_DEFAULT,      // tp_flags
-  "Free function wrapper"  // tp_doc
+  PyVarObject_HEAD_INIT(&PyType_Type, 0)
+  .tp_name = "geode.Function",
+  .tp_basicsize = sizeof(PythonFunction),
+  .tp_dealloc = PythonFunction::dealloc,
+  .tp_call = PythonFunction::call,
+  .tp_flags = Py_TPFLAGS_DEFAULT,
+  .tp_doc = "Free function wrapper",
 };
 
 PyObject* wrap_function_helper(const char* name, FunctionWrapper wrapper, void* function) {

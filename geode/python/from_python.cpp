@@ -14,10 +14,10 @@ bool FromPython<bool>::convert(PyObject* object) {
 }
 
 long FromPython<long>::convert(PyObject* object) {
-  long i = PyInt_AsLong(object);
+  long i = PyLong_AsLong(object);
   if (i==-1 && PyErr_Occurred()) throw_python_error();
   // Check that we had an exact integer
-  PyObject* y = PyInt_FromLong(i);
+  PyObject* y = PyLong_FromLong(i);
   if (!y) throw_python_error();
   int eq = PyObject_RichCompareBool(object,y,Py_EQ);
   Py_DECREF(y);
@@ -57,7 +57,7 @@ int FromPython<unsigned int>::convert(PyObject* object) {
 }
 
 long long FromPython<long long>::convert(PyObject* object) {
-  long long i = (long long)PyInt_AsUnsignedLongLongMask(object);
+  long long i = (long long)PyLong_AsUnsignedLongLongMask(object);
   if (i==-1 && PyErr_Occurred())
     throw_python_error();
   // Check that the conversion was exact
@@ -75,7 +75,7 @@ long long FromPython<long long>::convert(PyObject* object) {
 }
 
 unsigned long long FromPython<unsigned long long>::convert(PyObject* object) {
-  unsigned long long i = PyInt_AsUnsignedLongLongMask(object);
+  unsigned long long i = PyLong_AsUnsignedLongLongMask(object);
   if (i==(unsigned long long)-1 && PyErr_Occurred())
     throw_python_error();
   // Check that the conversion was exact
@@ -116,15 +116,15 @@ double FromPython<double>::convert(PyObject* object) {
 }
 
 const char* FromPython<const char*>::convert(PyObject* object) {
-  const char* string = PyString_AsString(object);
+  const char* string = PyUnicode_AsUTF8(object);
   if (!string) throw_python_error();
   return string;
 }
 
 string FromPython<string>::convert(PyObject* object) {
-  char* buffer;
   Py_ssize_t size;
-  if (PyString_AsStringAndSize(object,&buffer,&size))
+  const char* buffer = PyUnicode_AsUTF8AndSize(object,&size);
+  if (!buffer)
     throw_python_error();
   return string(buffer,buffer+size);
 }
@@ -139,7 +139,7 @@ uint8_t FromPython<uint8_t>::convert(PyObject* object) {
 }
 
 char FromPython<char>::convert(PyObject* object) {
-  const char* string=PyString_AsString(object);
+  const char* string=PyUnicode_AsUTF8(object);
   if (!string)
     throw_python_error();
   if (string[0] && string[1]) {

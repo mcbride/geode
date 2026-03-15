@@ -53,16 +53,16 @@ done:
 
 uint128_t FromPython<uint128_t>::convert(PyObject* object) {
   static_assert(sizeof(long long)==sizeof(uint64_t),"");
-  PyObject* n = PyNumber_Int(object);
+  PyObject* n = PyNumber_Long(object);
   if (!n) throw_python_error();
-  uint64_t lo = PyInt_AsUnsignedLongLongMask(n);
+  uint64_t lo = PyLong_AsUnsignedLongLongMask(n);
   if (lo==(uint64_t)-1 && PyErr_Occurred()){Py_DECREF(n);throw_python_error();}
   PyObject* phi = PyNumber_Rshift(n,p64);
   Py_DECREF(n);
   if (!phi) throw_python_error();
   uint64_t hi;
-  if (PyInt_Check(phi)) {
-    long shi = PyInt_AS_LONG(phi);
+  if (PyLong_Check(phi)) {
+    long shi = PyLong_AsLong(phi);
     if (shi < 0) {
       hi = -1;
       PyErr_SetString(PyExc_OverflowError,"can't convert negative number to uint128_t");
@@ -103,7 +103,7 @@ using namespace geode;
 
 void wrap_uint128() {
 #ifdef GEODE_PYTHON
-  p64 = PyInt_FromLong(64);
+  p64 = PyLong_FromLong(64);
   if (!p64) throw_python_error();
 
   GEODE_FUNCTION(uint128_test)

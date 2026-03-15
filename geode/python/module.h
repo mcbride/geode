@@ -21,6 +21,7 @@ namespace geode {
 
 GEODE_CORE_EXPORT void module_push(const char* name);
 GEODE_CORE_EXPORT void module_pop();
+GEODE_CORE_EXPORT PyObject* module_peek();
 
 // Defined in geode/python/exceptions.cpp, but declared here to minimize includes.
 GEODE_CORE_EXPORT void set_python_exception(const std::exception& error);
@@ -35,15 +36,19 @@ GEODE_CORE_EXPORT void set_python_exception(const std::exception& error);
 
 #define GEODE_PYTHON_MODULE(name) \
   GEODE_EXPORT_HELPER void geode_init_helper_##name(); \
-  GEODE_MODINIT init##name(); \
-  GEODE_MODINIT init##name() { \
+  GEODE_MODINIT PyInit_##name(); \
+  GEODE_MODINIT PyInit_##name() { \
     try { \
       ::geode::module_push(#name); \
       geode_init_helper_##name(); \
     } catch(const std::exception& error) { \
       ::geode::set_python_exception(error); \
+      ::geode::module_pop(); \
+      return NULL; \
     } \
+    PyObject* m = ::geode::module_peek(); \
     ::geode::module_pop(); \
+    return m; \
   } \
   void geode_init_helper_##name()
 

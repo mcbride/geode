@@ -97,7 +97,7 @@ const char* PythonError::what() const throw() {
       what_ = ((PyTypeObject*)type)->tp_name;
       what_ += ": ";
       if (PyObject* str = PyObject_Str(value))
-        if (const char* s = PyString_AsString(str))
+        if (const char* s = PyUnicode_AsUTF8(str))
           what_ += s;
         else
           what_ += "<__str__ didn't return a string>";

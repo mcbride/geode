@@ -42,7 +42,8 @@ public:
     // On other platforms, malloc should be 16 byte aligned
     Buffer* self = (Buffer*)malloc(16+m*sizeof(T));
 #endif
-    return GEODE_PY_OBJECT_INIT(self,&pytype);
+    GEODE_PY_OBJECT_INIT(self,&pytype);
+    return self;
   }
 };
 

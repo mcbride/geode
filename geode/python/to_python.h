@@ -38,15 +38,15 @@ template<class T> static inline typename enable_if<is_same<T,bool>,PyObject*>::t
 // Conversion from integers
 
 static inline PyObject* to_python(int value) {
-  return PyInt_FromLong(value);
+  return PyLong_FromLong(value);
 }
 
 static inline PyObject* to_python(unsigned int value) {
-  return PyInt_FromSize_t(value);
+  return PyLong_FromSize_t(value);
 }
 
 static inline PyObject* to_python(long value) {
-  return PyInt_FromLong(value);
+  return PyLong_FromLong(value);
 }
 
 static inline PyObject* to_python(unsigned long value) {
@@ -74,11 +74,11 @@ static inline PyObject* to_python(double value) {
 // Conversion from string/char*
 
 static inline PyObject* to_python(const char* value) {
-  return PyString_FromString(value);
+  return PyUnicode_FromString(value);
 }
 
 static inline PyObject* to_python(const string& value) {
-  return PyString_FromStringAndSize(value.c_str(),(Py_ssize_t)value.size());
+  return PyUnicode_FromStringAndSize(value.c_str(),(Py_ssize_t)value.size());
 }
 
 // uint8_t is a valuable small integer type to use, and we believe most
@@ -90,7 +90,7 @@ static_assert(!is_same<char,uint8_t>::value, "Different conversions for uint8_t 
 // Conversion from char
 static inline PyObject* to_python(char value) {
   char s[2] = {value,0};
-  return PyString_FromString(s);
+  return PyUnicode_FromString(s);
 }
 
 // Conversion from uint8_t

@@ -1,7 +1,7 @@
 #.rst:
 # FindPathPython
 # ----------------
-# Search for Python libs that match Python executable that is present on $PATH
+# Search for Python 3 libs that match Python executable that is present on $PATH
 # Sets the following variables:
 #
 #  ::
@@ -13,72 +13,60 @@
 #
 
 find_package(PkgConfig)
-find_package(PythonInterp)
 
-if (PYTHONINTERP_FOUND)
+# Use FindPython3 (modern CMake) instead of deprecated FindPythonInterp
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
+
+if (Python3_Interpreter_FOUND)
+  set(PYTHON_EXECUTABLE ${Python3_EXECUTABLE})
   message(STATUS "Python binary found at ${PYTHON_EXECUTABLE}")
 
-  execute_process(
-    COMMAND
-      ${PYTHON_EXECUTABLE} -c "import numpy, sys;sys.stdout.write(numpy.get_include())"
-    OUTPUT_VARIABLE NUMPY_INCLUDE_DIRS
-  )
-  message(STATUS "Numpy found in ${NUMPY_INCLUDE_DIRS}")
+  if (Python3_NumPy_FOUND)
+    set(NUMPY_INCLUDE_DIRS ${Python3_NumPy_INCLUDE_DIRS})
+    message(STATUS "Numpy found in ${NUMPY_INCLUDE_DIRS}")
+  else()
+    execute_process(
+      COMMAND
+        ${PYTHON_EXECUTABLE} -c "import numpy, sys;sys.stdout.write(numpy.get_include())"
+      OUTPUT_VARIABLE NUMPY_INCLUDE_DIRS
+      RESULT_VARIABLE _numpy_result
+    )
+    if (_numpy_result EQUAL 0)
+      message(STATUS "Numpy found in ${NUMPY_INCLUDE_DIRS}")
+    else()
+      message(WARNING "NumPy not found")
+    endif()
+  endif()
 
-  # This uses sysconfig from inside PYTHON_EXECTUABLE to ensure we build against same python executable that is present on $PATH
-  execute_process(
-    COMMAND
-      ${PYTHON_EXECUTABLE} -c "import sysconfig, sys;sys.stdout.write(sysconfig.get_config_var('LIBPC'))"
-    OUTPUT_VARIABLE PYTHON_LIBPC
-  )
-  message(STATUS "Looking for python pkgconfig in ${PYTHON_LIBPC}")
-
-  unset(PYTHON_FOUND) # WIP: Force pkg_check_modules to search even if there is a cached value found
-  set(ENV{PKG_CONFIG_PATH} "${PYTHON_LIBPC}:$ENV{PKG_CONFIG_PATH}")
-  set(ENV{PKG_CONFIG_ALLOW_SYSTEM_LIBS} "1")
-  set(ENV{PKG_CONFIG_ALLOW_SYSTEM_CFLAGS} "1")
-  pkg_check_modules(PYTHON python)
-
-  if(NOT PYTHON_INCLUDE_DIRS)
-    message(STATUS "pkg-config did not set Python include dirs. Falling back to sysconfig")
+  if (Python3_Development_FOUND)
+    set(PYTHON_INCLUDE_DIRS ${Python3_INCLUDE_DIRS})
+    set(PYTHON_LIBRARIES ${Python3_LIBRARIES})
+  else()
+    # Fallback to sysconfig
     execute_process(
       COMMAND
         ${PYTHON_EXECUTABLE} -c "import sysconfig, sys;sys.stdout.write(sysconfig.get_path('include'))"
       OUTPUT_VARIABLE PYTHON_INCLUDE_DIRS
     )
-  endif()
-
-  if(NOT PYTHON_LIBRARY_DIRS)
-    # Ideally pkg_check_modules should have set this, but as a fallback we ask sysconfig for LIBDIR
-    message(STATUS "pkg-config did not set Python library dirs. Falling back to sysconfig")
     execute_process(
       COMMAND
         ${PYTHON_EXECUTABLE} -c "import sysconfig, sys;sys.stdout.write(sysconfig.get_config_var('LIBDIR'))"
       OUTPUT_VARIABLE PYTHON_LIBRARY_DIRS
     )
-  endif()
-
-  execute_process(
-    COMMAND
-      ${PYTHON_EXECUTABLE} -c "import sysconfig, sys;sys.stdout.write(sysconfig.get_config_var('MULTIARCH'))"
-    OUTPUT_VARIABLE PYTHON_MULTIARCH_DIRS
-  )
-
-  # PYTHON_LIBRARIES and PYTHON_LIBRARY_DIRS have the name and path to where python library exists
-  # We need to combine those and add appropriate prefixes and suffixes so we can pass library directly later
-  # Use a name other than PYTHON_LIBRARY since find_library won't do anything if variable is already set
-  unset(_PYTHON_LIBRARIES)
-  message(STATUS "Expecting to find ${PYTHON_LIBRARIES} in ${PYTHON_LIBRARY_DIRS}")
-  find_library(_PYTHON_LIBRARIES NAMES ${PYTHON_LIBRARIES} PATHS ${PYTHON_LIBRARY_DIRS} PATH_SUFFIXES ${PYTHON_MULTIARCH_DIRS} NO_DEFAULT_PATH)
-  message(STATUS "find_library returned ${_PYTHON_LIBRARIES}")
-
-  if(_PYTHON_LIBRARIES)
-    set(PYTHON_LIBRARIES ${_PYTHON_LIBRARIES})
-  else()
-    message(WARNING " Unable to find full path to python lib")
+    execute_process(
+      COMMAND
+        ${PYTHON_EXECUTABLE} -c "import sysconfig, sys;sys.stdout.write(sysconfig.get_config_var('LDLIBRARY'))"
+      OUTPUT_VARIABLE PYTHON_LDLIBRARY
+    )
+    find_library(_PYTHON_LIBRARIES NAMES ${PYTHON_LDLIBRARY} python3 PATHS ${PYTHON_LIBRARY_DIRS} NO_DEFAULT_PATH)
+    if(_PYTHON_LIBRARIES)
+      set(PYTHON_LIBRARIES ${_PYTHON_LIBRARIES})
+    else()
+      message(WARNING " Unable to find full path to python lib")
+    endif()
   endif()
 else()
-  message(WARNING " No python interpreter found!")
+  message(WARNING " No python3 interpreter found!")
 endif()
 
 set(PYTHON_FOUND TRUE)
@@ -94,4 +82,3 @@ else()
   set(PYTHON_FOUND PYTHON_LIBRARIES-NOTFOUND)
   message(ERROR " Unable to find python library")
 endif()
-

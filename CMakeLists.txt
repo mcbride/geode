@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.5)
 project(geode)
-cmake_minimum_required(VERSION 3.2)
 
 option(GEODE_REQUIRE_PYTHON "Generate an error if python bindings won't be built instead of silently disabling them" FALSE)
 option(GEODE_DISABLE_PYTHON "Don't build python bindings even if available" FALSE)
@@ -14,23 +14,13 @@ find_package(PkgConfig)
 find_package(JPEG)
 find_package(PNG)
 
-set(GMP_LIB_DIR "/usr/lib/" CACHE PATH "Path to libgmp.so")
-
-if(UNIX AND NOT APPLE)
-  set(GMP_INCLUDE_DIR "/usr/include/" CACHE PATH "Path to gmp.h")
-else()
-  set(GMP_INCLUDE_DIR "/usr/local/Cellar/" CACHE PATH "Path to gmp.h")
-endif()
-
-
-
 find_library(
   GMP_LIBRARIES gmp
-  HINTS ${GMP_LIB_DIR}
+  HINTS /opt/homebrew/lib /usr/local/lib /usr/lib
 )
 find_path(
   GMP_INCLUDE gmp.h
-  HINTS ${GMP_INCLUDE_DIR}
+  HINTS /opt/homebrew/include /usr/local/include /usr/include
 )
 if (GMP_LIBRARIES AND GMP_INCLUDE)
   set(GMP_FOUND TRUE)
@@ -44,17 +34,14 @@ endif()
 
 
 
-set(OPENMESH_LIB_DIR "/usr/local/lib/OpenMesh/")
-set(OPENMESH_INCLUDE_DIR "/usr/local/include/OpenMesh")
-
 find_library(
-  OPENMESH_LIBRARIES libOpenMeshCore.a libOpenMeshTools.a
-  HINTS ${OPENMESH_LIB_DIR}
+  OPENMESH_LIBRARIES OpenMeshCore
+  HINTS /opt/homebrew/lib /usr/local/lib /usr/local/lib/OpenMesh
 )
 
 find_path(
-  OPENMESH_INCLUDE Core/Mesh/TriMeshT.hh
-  HINTS ${OPENMESH_INCLUDE_DIR}
+  OPENMESH_INCLUDE OpenMesh/Core/Mesh/TriMeshT.hh
+  HINTS /opt/homebrew/include /usr/local/include /usr/include
 )
 
 if (OPENMESH_LIBRARIES AND OPENMESH_INCLUDE)

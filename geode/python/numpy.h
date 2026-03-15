@@ -8,7 +8,8 @@
 
 #ifdef GEODE_PYTHON
 #define PY_ARRAY_UNIQUE_SYMBOL _try_python_array_api
-#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_2_0_API_VERSION
+#define NPY_TARGET_VERSION NPY_2_0_API_VERSION
 #ifndef GEODE_IMPORT_NUMPY
 #define NO_IMPORT_ARRAY
 #endif
@@ -248,7 +249,7 @@ to_numpy(TArray& array) {
 template<class TV> typename enable_if<NumpyIsStatic<TV>,TV>::type
 from_numpy(PyObject* object) { // Borrows reference to object
   // Allow conversion from 0 to static vector/matrix types
-  if(PyInt_Check(object) && !PyInt_AS_LONG(object))
+  if(PyLong_Check(object) && !PyLong_AsLong(object))
     return TV();
 
   // Convert object to an array with the correct type and rank
