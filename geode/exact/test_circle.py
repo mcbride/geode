@@ -2,6 +2,7 @@
 
 from __future__ import division
 from geode import *
+import builtins
 import sys
 
 def random_circle_arcs(n,k):
@@ -132,7 +133,7 @@ def test_circles():
     e = 0
     for cs,xs in zip(correct,arcs):
       for c,x in zip(cs,xs):
-        e = max(e,maxabs(c[0]-x['x']),abs(c[1]-x['q']))
+        e = builtins.max(e,maxabs(c[0]-x['x']),abs(c[1]-x['q']))
     return e
 
   # Test CSG
