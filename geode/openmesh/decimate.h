@@ -9,11 +9,11 @@ namespace geode {
 // Decimater type
 typedef OpenMesh::Decimater::DecimaterT<TriMesh> DecimaterT;
 
-template<class Decimater>
-class FaceQualityModule: public OpenMesh::Decimater::ModBaseT<Decimater> {
+template<class MeshT>
+class FaceQualityModule: public OpenMesh::Decimater::ModBaseT<MeshT> {
 
 public:
-  DECIMATING_MODULE(FaceQualityModule, Decimater, FaceQuality);
+  DECIMATING_MODULE(FaceQualityModule, MeshT, FaceQuality);
 
   // prevents collapse of edges that would create bad (degenerate) triangles
 
@@ -42,17 +42,17 @@ protected:
   }
 
 public:
-  FaceQualityModule(Decimater& dec) : OpenMesh::Decimater::ModBaseT<Decimater>(dec, true), minquality(1e-5) {}
+  FaceQualityModule(MeshT& mesh) : OpenMesh::Decimater::ModBaseT<MeshT>(mesh, true), minquality(1e-5) {}
 
   double min_quality() { return minquality; }
   void min_quality(double quality) { minquality = quality; }
 
-  virtual float collapse_priority(const OpenMesh::Decimater::CollapseInfoT<Mesh> &ci) {
+  virtual float collapse_priority(const OpenMesh::Decimater::CollapseInfoT<MeshT> &ci) {
 
     bool collapse_allowed = true;
 
     // check if any of the faces incident to the moved vertex will be of bad quality after the collapse
-    Mesh const &mesh = OpenMesh::Decimater::ModBaseT<Decimater>::mesh();
+    Mesh const &mesh = this->mesh();
     for (typename Mesh::ConstVertexFaceIter vf = mesh.cvf_iter(ci.v0); vf; ++vf) {
       if (vf.handle() != ci.fl && vf.handle() != ci.fr) {
         if (modified_face_quality(mesh, vf.handle(), ci.v0, ci.v1) < minquality) {
@@ -63,9 +63,9 @@ public:
     }
 
     if (collapse_allowed)
-      return OpenMesh::Decimater::ModBaseT<Decimater>::LEGAL_COLLAPSE;
+      return Base::LEGAL_COLLAPSE;
     else
-      return OpenMesh::Decimater::ModBaseT<Decimater>::ILLEGAL_COLLAPSE;
+      return Base::ILLEGAL_COLLAPSE;
   }
 
 private:
@@ -76,11 +76,11 @@ private:
 
 
 
-template<class Decimater>
-class BoundaryPreservationModule: public OpenMesh::Decimater::ModBaseT<Decimater> {
+template<class MeshT>
+class BoundaryPreservationModule: public OpenMesh::Decimater::ModBaseT<MeshT> {
 
 public:
-  DECIMATING_MODULE(BoundaryPreservationModule, Decimater, BoundaryPrevervation);
+  DECIMATING_MODULE(BoundaryPreservationModule, MeshT, BoundaryPrevervation);
 
   // prevents collapse of boundary edges at a vertex whose boundary edges are not (very) collinear
 
@@ -90,18 +90,18 @@ protected:
   double max_error;
 
 public:
-  BoundaryPreservationModule(Decimater& dec)
-    : OpenMesh::Decimater::ModBaseT<Decimater>(dec, true), max_error(0) {}
+  BoundaryPreservationModule(MeshT& mesh)
+    : OpenMesh::Decimater::ModBaseT<MeshT>(mesh, true), max_error(0) {}
 
   void set_max_error(double error) {
     max_error = error;
   }
 
-  virtual float collapse_priority(const OpenMesh::Decimater::CollapseInfoT<Mesh> &ci) {
+  virtual float collapse_priority(const OpenMesh::Decimater::CollapseInfoT<MeshT> &ci) {
 
     typedef Vector<real,3> TV;
 
-    Mesh const &mesh = OpenMesh::Decimater::ModBaseT<Decimater>::mesh();
+    Mesh const &mesh = this->mesh();
 
     typename Mesh::HalfedgeHandle last, next;
 
@@ -113,7 +113,7 @@ public:
       next = mesh.next_halfedge_handle(ci.v1v0);
     } else {
       // no boundary, always allowed
-      return OpenMesh::Decimater::ModBaseT<Decimater>::LEGAL_COLLAPSE;
+      return Base::LEGAL_COLLAPSE;
     }
 
     // Measure distance from middle point to segment between outer points
@@ -121,8 +121,7 @@ public:
                                    mesh.point(mesh.to_vertex_handle(next)))
                                   .distance(mesh.point(mesh.from_vertex_handle(next)));
 
-    return float(error < max_error ? OpenMesh::Decimater::ModBaseT<Decimater>::LEGAL_COLLAPSE
-                                   : OpenMesh::Decimater::ModBaseT<Decimater>::ILLEGAL_COLLAPSE);
+    return float(error < max_error ? Base::LEGAL_COLLAPSE : Base::ILLEGAL_COLLAPSE);
   }
 
 private:

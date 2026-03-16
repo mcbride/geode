@@ -724,7 +724,7 @@ unordered_map<VertexHandle, double, Hasher> TriMesh::geodesic_distance(vector<Ve
 
       if (newdist < olddist) {
         dist[vv.handle()] = newdist;
-        queue.push(prioritize(vv.handle(), newdist));
+        queue.push(prioritize(VertexHandle(vv.handle()), newdist));
       }
     }
   }
@@ -1844,7 +1844,7 @@ void wrap_trimesh() {
 
   // need to specify exact type for overloaded functions
   typedef Box<Vector<real,3> > (TriMesh::*box_Method)() const;
-  typedef TriMesh::FaceHandle (TriMesh::*fh_Method_vh_vh_vh)(TriMesh::VertexHandle, TriMesh::VertexHandle, TriMesh::VertexHandle);
+  typedef OpenMesh::SmartFaceHandle (TriMesh::*fh_Method_vh_vh_vh)(TriMesh::VertexHandle, TriMesh::VertexHandle, TriMesh::VertexHandle);
 
   typedef Vector<TriMesh::VertexHandle, 3> (TriMesh::*Vvh3_Method_fh)(TriMesh::FaceHandle ) const;
   typedef Vector<TriMesh::VertexHandle, 2> (TriMesh::*Vvh2_Method_eh)(TriMesh::EdgeHandle ) const;

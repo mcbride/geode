@@ -11,8 +11,8 @@ namespace geode {
 typedef real T;
 typedef Vector<T,3> TV;
 
-template class FaceQualityModule<DecimaterT>;
-template class BoundaryPreservationModule<DecimaterT>;
+template class FaceQualityModule<TriMesh>;
+template class BoundaryPreservationModule<TriMesh>;
 
 int decimate(TriMesh &mesh, int max_collapses, double maxangleerror, double maxquadricerror, double min_face_quality) {
 
@@ -23,8 +23,8 @@ int decimate(TriMesh &mesh, int max_collapses, double maxangleerror, double maxq
   DecimaterT decimater(mesh);
 
   // module types
-  typedef OpenMesh::Decimater::ModNormalFlippingT<DecimaterT>::Handle HModNormalFlipping;
-  typedef OpenMesh::Decimater::ModQuadricT<DecimaterT>::Handle HModQuadric;
+  typedef OpenMesh::Decimater::ModNormalFlippingT<TriMesh>::Handle HModNormalFlipping;
+  typedef OpenMesh::Decimater::ModQuadricT<TriMesh>::Handle HModQuadric;
 
   // Quadric
   HModQuadric hModQuadric;
@@ -36,13 +36,13 @@ int decimate(TriMesh &mesh, int max_collapses, double maxangleerror, double maxq
     decimater.module(hModQuadric).set_max_err(sqr(maxquadricerror));
 
   // prevent ruining the boundary
-  BoundaryPreservationModule<DecimaterT>::Handle hModBoundary;
+  BoundaryPreservationModule<TriMesh>::Handle hModBoundary;
   decimater.add(hModBoundary);
   decimater.module(hModBoundary).set_max_error(maxquadricerror);
 
   // prevent creation of crappy triangles
   if (min_face_quality > 0.) {
-    FaceQualityModule<DecimaterT>::Handle hModFaceQuality;
+    FaceQualityModule<TriMesh>::Handle hModFaceQuality;
     decimater.add(hModFaceQuality);
     decimater.module(hModFaceQuality).min_quality(min_face_quality);
   }
@@ -51,7 +51,7 @@ int decimate(TriMesh &mesh, int max_collapses, double maxangleerror, double maxq
   if (maxangleerror > 0.) {
     HModNormalFlipping hModNormalFlipping;
     decimater.add(hModNormalFlipping);
-    decimater.module(hModNormalFlipping).set_normal_deviation((float)maxangleerror);
+    decimater.module(hModNormalFlipping).set_max_normal_deviation((float)maxangleerror);
   }
 
   if (!decimater.initialize()) {

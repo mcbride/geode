@@ -55,7 +55,6 @@ public:
 
   OVec(): Vector<T,d>() {};
   OVec(Vector<T,d> const &v): Vector<T,d>(v) {};
-  OVec(double x): Vector<T,d>(x) {};
   OVec(T const& x): Vector<T,d>(x) {};
   OVec(T const& x, T const& y): Vector<T,d>(x,y) {};
   OVec(T const& x, T const& y, T const& z): Vector<T,d>(x,y,z) {};
@@ -94,6 +93,12 @@ template<class T,int d> struct IsScalarBlock<OVec<T,d> >:public IsScalarBlock<Ve
 template<class T,int d> inline bool isfinite(const OVec<T,d>& v) {
   return isfinite(static_cast<const Vector<T,d>&>(v));
 }
+
+// OpenMesh 11 calls these as free functions on the Normal/Point type; provide via ADL
+template<class T,int d> inline T norm(const OVec<T,d>& v) { return v.norm(); }
+template<class T,int d> inline T sqrnorm(const OVec<T,d>& v) { return v.sqrnorm(); }
+template<class T,int d> inline OVec<T,d>& normalize(OVec<T,d>& v) { v.normalize(); return v; }
+template<class T,int d> inline OVec<T,d>& vectorize(OVec<T,d>& v, T const& val) { v.vectorize(val); return v; }
 
 }
 
@@ -697,8 +702,6 @@ template<class T> struct valid_binary<std::vector<T>> {
     return is.good() ? bytes : 0;
   }
 };
-
-template<class T> struct binary<std::vector<T>> : public geode::mpl::if_c<binary<T>::is_streamable, valid_binary<std::vector<T>>, invalid_binary<std::vector<T>>>::type {};
 
 // dynamic size because size of content may not be constant
 template<class T, class U> struct binary<std::pair<T,U>> {

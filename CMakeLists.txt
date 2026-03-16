@@ -49,10 +49,16 @@ else()
 endif()
 
 find_library(
-  OPENMESH_LIBRARIES OpenMeshCore
+  OPENMESH_CORE_LIBRARY OpenMeshCore
   HINTS /opt/homebrew/lib /usr/local/lib /usr/local/lib/OpenMesh
         /usr/lib/${_ARCH_LIB_SUFFIX}/OpenMesh /usr/lib64/OpenMesh /usr/lib/OpenMesh
 )
+find_library(
+  OPENMESH_TOOLS_LIBRARY OpenMeshTools
+  HINTS /opt/homebrew/lib /usr/local/lib /usr/local/lib/OpenMesh
+        /usr/lib/${_ARCH_LIB_SUFFIX}/OpenMesh /usr/lib64/OpenMesh /usr/lib/OpenMesh
+)
+set(OPENMESH_LIBRARIES ${OPENMESH_CORE_LIBRARY} ${OPENMESH_TOOLS_LIBRARY})
 
 find_path(
   OPENMESH_INCLUDE OpenMesh/Core/Mesh/TriMeshT.hh
@@ -60,7 +66,7 @@ find_path(
         /usr/include/${_ARCH_LIB_SUFFIX} /usr/include
 )
 
-if (OPENMESH_LIBRARIES AND OPENMESH_INCLUDE)
+if (OPENMESH_CORE_LIBRARY AND OPENMESH_TOOLS_LIBRARY AND OPENMESH_INCLUDE)
   set(OPENMESH_FOUND TRUE)
 endif()
 
