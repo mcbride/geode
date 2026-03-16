@@ -45,7 +45,7 @@ The possible flags are:
     IsLeaf = 1    # if false, data is an inline sequence of atoms
     Compressed = 2 # whether the data is compressed (leaf only)
     CRC = 4        # whether the data has a crc32 checksum (leaf only)
-    
+
 The data section contains the concatenation of the data from all leaves
 in order of their appearance in the tree section.  If Compressed is set,
 the data is compressed using zlib.  Note that in this case, data_size is
@@ -98,9 +98,9 @@ __all__ = 'read write pack unpack Atom'.split()
 import sys
 import zlib
 import struct
-from cStringIO import StringIO
+from io import BytesIO
 
-signature = '\003TRY'
+signature = b'\003TRY'
 current_version = 2
 
 nonleaf_makers = {}
@@ -114,17 +114,17 @@ def register_nonleaf(typename,type,maker,parser,version=0):
   maker(value) should return a series of (name,value) pairs, and
   parser(pairs,version) should convert the given (name,value) pairs
   into a value.
-  
+
   """
-  nonleaf_makers[type] = typename,version,maker 
+  nonleaf_makers[type] = typename,version,maker
   nonleaf_parsers[typename] = type,parser
 
 def register_leaf(typename,type,maker,parser,version=0):
   """Register a leaf atom type.
 
-  maker(value) should return a string containing the binary contents
-  of value, and parser(data,version) should unpack the binary string
-  data into a value.
+  maker(value) should return a bytes object containing the binary contents
+  of value, and parser(data,version) should unpack the binary data
+  into a value.
 
   """
   leaf_makers[type] = typename,version,maker
@@ -155,38 +155,41 @@ def read_uint(file):
   result = 0
   shift = 0
   while True:
-    try:
-      byte = ord(file.read(1))
-    except TypeError:
+    b = file.read(1)
+    if not b:
       raise EOFError
+    byte = b[0] if isinstance(b, (bytes, bytearray)) else ord(b)
     if byte&128:
       result |= (byte&127)<<shift
       shift += 7
     else:
       return result|(byte<<shift)
 
-def uint_to_str(i):
-  """Convert a uint to a string."""
-  s = ''
+def uint_to_bytes(i):
+  """Convert a uint to bytes."""
+  parts = bytearray()
   while True:
     if i>127:
-      s += chr(i&127|128)
+      parts.append(i&127|128)
       i >>= 7
     else:
-      return s+chr(i)
+      parts.append(i)
+      return bytes(parts)
 
 def read_string(file):
   return file.read(read_uint(file))
 
-def string_to_str(s):
-  return uint_to_str(len(s))+s
+def string_to_bytes(s):
+  if isinstance(s, str):
+    s = s.encode('latin-1')
+  return uint_to_bytes(len(s))+s
 
 def read_crc(file):
   """Read a crc32 from a file."""
   return struct.unpack('<i',file.read(4))[0]
 
-def crc_to_str(crc):
-  """Convert a crc32 to a string."""
+def crc_to_bytes(crc):
+  """Convert a crc32 to bytes."""
   return struct.pack('<I',crc%2**32)
 
 IsLeaf = 1
@@ -197,14 +200,14 @@ FlagMask = 7
 class Atom(object):
   __slots__ = ['name','type','version','flags','data_size','data_crc']
 
-  def to_str(self):
-    return ''.join([string_to_str(self.name),string_to_str(self.type),uint_to_str(self.version),uint_to_str(self.flags)])
+  def to_bytes(self):
+    return b''.join([string_to_bytes(self.name),string_to_bytes(self.type),uint_to_bytes(self.version),uint_to_bytes(self.flags)])
 
 class Leaf(Atom):
   __slots__ = ['data']
 
-  def to_str(self):
-    return Atom.to_str(self)+uint_to_str(self.data_size)+crc_to_str(self.data_crc)
+  def to_bytes(self):
+    return Atom.to_bytes(self)+uint_to_bytes(self.data_size)+crc_to_bytes(self.data_crc)
 
   def parse(self,file):
     data = file.read(self.data_size)
@@ -225,8 +228,8 @@ class Leaf(Atom):
 class Nonleaf(Atom):
   __slots__ = ['children']
 
-  def to_str(self):
-    return ''.join([Atom.to_str(self),uint_to_str(len(self.children))]+[c.to_str() for c in self.children])
+  def to_bytes(self):
+    return b''.join([Atom.to_bytes(self),uint_to_bytes(len(self.children))]+[c.to_bytes() for c in self.children])
 
   def parse(self,file):
     children = [(c.name,c.parse(file)) for c in self.children]
@@ -242,8 +245,8 @@ class Nonleaf(Atom):
       c.write_data(file)
 
 def read_atom(file):
-  name = read_string(file)
-  type = read_string(file)
+  name = read_string(file).decode('latin-1')
+  type = read_string(file).decode('latin-1')
   version = read_uint(file)
   flags = read_uint(file)
   if flags&~FlagMask:
@@ -303,7 +306,7 @@ def read_stream(file):
 
   # Read atom tree.  This reads and parses the entire atom hierarchy, but does not parse the leaf data.
   tree = file.read(tree_size)
-  tree_file = StringIO(tree)
+  tree_file = BytesIO(tree)
   try:
     atom = read_atom(tree_file)
   except EOFError:
@@ -323,17 +326,17 @@ def read_stream(file):
 
 def write_stream(file,value):
   '''Write a .try file to an open stream.'''
-  # Build atom tree in memory 
+  # Build atom tree in memory
   atom = make_atom('',value)
-  tree = atom.to_str()
+  tree = atom.to_bytes()
 
   # Write header
   file.write(signature)
   tree_size = len(tree)
   data_size = atom.data_size
   tree_crc = zlib.crc32(tree)
-  header = ''.join(uint_to_str(i) for i in (current_version,tree_size,data_size))+crc_to_str(tree_crc)
-  file.write(string_to_str(header))
+  header = b''.join(uint_to_bytes(i) for i in (current_version,tree_size,data_size))+crc_to_bytes(tree_crc)
+  file.write(string_to_bytes(header))
 
   # Write tree
   file.write(tree)
@@ -358,12 +361,12 @@ def write(filename,value):
   write_stream(open(filename,'wb'),value)
 
 def unpack(buffer):
-  '''Unpack a string in .try format into data.'''
-  return read_stream(StringIO(buffer))
+  '''Unpack a bytes object in .try format into data.'''
+  return read_stream(BytesIO(buffer))
 
 def pack(value):
-  '''Pack data into a .try format string.'''
-  file = StringIO()
+  '''Pack data into a .try format bytes object.'''
+  file = BytesIO()
   write_stream(file,value)
   return file.getvalue()
 
@@ -372,14 +375,14 @@ def pack(value):
 def parse_dict(pairs,version):
   return dict(pairs)
 
-register_nonleaf('dict',dict,dict.iteritems,parse_dict)
+register_nonleaf('dict',dict,dict.items,parse_dict)
 
 ### Array
 
 import numpy
 
 # Start dtype map off with platform independent dtypes only
-int_to_dtype = map(numpy.dtype,'bool int8 uint8 int16 uint16 int32 uint32 int64 uint64 float32 float64'.split())
+int_to_dtype = list(map(numpy.dtype,'bool int8 uint8 int16 uint16 int32 uint32 int64 uint64 float32 float64'.split()))
 dtype_num_to_int = dict((d.num,i) for i,d in enumerate(int_to_dtype))
 
 def make_array(a):
@@ -395,15 +398,15 @@ def make_array(a):
     else:
       raise TypeError("unregistered dtype '%s'"%a.dtype)
   # Convert numpy array to little endian buffer, flipping endianness if necessary
-  return ''.join([uint_to_str(i) for i in (dtype,len(a.shape))+a.shape]+[a.astype(a.dtype.newbyteorder('<')).tostring()])
+  return b''.join([uint_to_bytes(i) for i in (dtype,len(a.shape))+a.shape]+[a.astype(a.dtype.newbyteorder('<')).tobytes()])
 
 def parse_array(data,version):
-  file = StringIO(data)
+  file = BytesIO(data)
   dtype = int_to_dtype[read_uint(file)]
   rank = read_uint(file)
-  shape = [read_uint(file) for _ in xrange(rank)]
+  shape = [read_uint(file) for _ in range(rank)]
   # Convert little endian buffer to a numpy array, flipping endianness if necessary
-  array = (numpy.frombuffer(data,dtype=dtype.newbyteorder('<'),offset=file.tell()).astype(dtype) if numpy.product(shape) else numpy.empty(0,dtype)).reshape(shape)
+  array = (numpy.frombuffer(data,dtype=dtype.newbyteorder('<'),offset=file.tell()).astype(dtype) if numpy.prod(shape) else numpy.empty(0,dtype)).reshape(shape)
   return numpy.require(array,requirements='a')
 
 register_leaf('array',numpy.ndarray,make_array,parse_array)
@@ -412,7 +415,13 @@ for t in int,bool,float,numpy.int32,numpy.int64,numpy.float32,numpy.float64:
 
 ### Str
 
-register_leaf('str',str,str,lambda s,v:s)
+def _make_str(s):
+  return s.encode('utf-8') if isinstance(s, str) else s
+
+def _parse_str(data, version):
+  return data.decode('utf-8') if isinstance(data, bytes) else data
+
+register_leaf('str',str,_make_str,_parse_str)
 
 ### Tuple and List
 
@@ -423,7 +432,7 @@ def parse_tuple(pairs,version):
   x = []
   for i,(n,y) in enumerate(pairs):
     assert i==int(n)
-    x.append(y) 
+    x.append(y)
   return tuple(x)
 
 register_nonleaf('list',list,tuple_maker,parse_tuple)

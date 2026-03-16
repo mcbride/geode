@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import division
+import builtins
 from numpy import *
 from geode.vector import *
 
@@ -29,7 +30,7 @@ def test_misc():
 def test_magnitude():
   tolerance=1e-6
   v=V(1,2,3)
-  mag_squared=sum(a*a for a in v)
+  mag_squared=builtins.sum(a*a for a in v)
   mag=sqrt(mag_squared)
   assert abs(sqr_magnitude(v)-mag_squared)<tolerance
   assert abs(magnitude(v)-mag)<tolerance

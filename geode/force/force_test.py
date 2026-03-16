@@ -59,7 +59,7 @@ def force_test(force,X,dx_scale=1e-5,tolerance=1e-5,iterations=10,verbose=False,
   Fe0 = elastic_force(X)
   K0 = damping_energy(X,V)
   Fd0 = damping_force(X,V)
-  for _ in xrange(iterations):
+  for _ in range(iterations):
     # Test elastic force
     dX = rand(dx_scale)
     U2 = elastic_energy(X+dX)

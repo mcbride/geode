@@ -123,10 +123,20 @@ const char* FromPython<const char*>::convert(PyObject* object) {
 
 string FromPython<string>::convert(PyObject* object) {
   Py_ssize_t size;
-  const char* buffer = PyUnicode_AsUTF8AndSize(object,&size);
-  if (!buffer)
+  if (PyBytes_Check(object)) {
+    char* buffer;
+    if (PyBytes_AsStringAndSize(object,&buffer,&size)<0)
+      throw_python_error();
+    return string(buffer,buffer+size);
+  }
+  PyObject* bytes = PyUnicode_AsLatin1String(object);
+  if (!bytes)
     throw_python_error();
-  return string(buffer,buffer+size);
+  char* buffer;
+  PyBytes_AsStringAndSize(bytes,&buffer,&size);
+  string result(buffer,buffer+size);
+  Py_DECREF(bytes);
+  return result;
 }
 
 uint8_t FromPython<uint8_t>::convert(PyObject* object) {

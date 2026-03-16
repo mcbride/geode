@@ -25,7 +25,7 @@ def test_delaunay(benchmark=False,cgal=False,origin=True,circle=False,constrain=
   for case in cases:
     for n,seed,chew in case:
       random.seed(seed)
-      for c in (False,)+(True,)*(constrain and abs(n)<200):
+      for c in (False,)+(True,)*int(constrain and abs(n)<200):
         if n<0 and not origin:
           continue
         if n>0 and circle: name,X = 'circle',polar(random.uniform(0,2*pi,n))

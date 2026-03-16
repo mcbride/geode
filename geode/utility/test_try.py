@@ -2,14 +2,14 @@ from __future__ import absolute_import
 
 from geode.utility import tryfile
 from numpy import *
-import py.test
+import pytest
 import tempfile
 import unittest
 
 def check(a,b):
   if isinstance(a,dict) and isinstance(b,dict):
     assert len(a)==len(b)
-    for n,av in a.iteritems():
+    for n,av in a.items():
       check(av,b[n])
   elif isinstance(a,tuple) and isinstance(b,tuple):
     assert len(a)==len(b)
@@ -37,21 +37,21 @@ def test_try():
   check(value,tryfile.unpack(tryfile.pack(value)))
 
 def test_version_1():
-  file = dir+'/1.try' 
-  open(file,'wb').write('\x03TRY\x03\x01\x0a\x03\x00\x05array\x00\x01\x03\x02\x00\x11')
+  file = dir+'/1.try'
+  open(file,'wb').write(b'\x03TRY\x03\x01\x0a\x03\x00\x05array\x00\x01\x03\x02\x00\x11')
   check(tryfile.read(file),17)
 
 def test_version_2():
   file = dir+'/2.try'
-  raw = '\x03TRY\x07\x02\x0e\x0e\xe9\x28\xd7\n\x00\x05array\x00\x07\x0eA\xc8~@x\x9cce\x10d``\x00\x00\x00h\x00\x17'
+  raw = b'\x03TRY\x07\x02\x0e\x0e\xe9\x28\xd7\n\x00\x05array\x00\x07\x0eA\xc8~@x\x9cce\x10d``\x00\x00\x00h\x00\x17'
   # Verify that our raw string is a correct version 2 file
   open(file,'wb').write(raw)
   check(tryfile.read(file),17)
   # Verify that deleting any byte or changing any bit is detected
   def bad(s):
-    open(file,'w').write(s)
-    py.test.raises(Exception,tryfile.read,file)
-  for i in xrange(len(raw)):
+    open(file,'wb').write(s)
+    pytest.raises(Exception,tryfile.read,file)
+  for i in range(len(raw)):
     bad(raw[:i]+raw[i+1:])
-    for j in xrange(8):
-      bad(raw[:i]+chr(ord(raw[i])^(1<<j))+raw[i+1:])
+    for j in range(8):
+      bad(raw[:i]+bytes([raw[i]^(1<<j)])+raw[i+1:])

@@ -41,12 +41,12 @@ class ChangeTracker:
 
   def pull(self):
     result = {}
-    for name, ref in self._refs.iteritems():
+    for name, ref in self._refs.items():
       if name in self._up_to_date:
         continue
       result[name] = ref()
       self._up_to_date.add(name)
-    for name, d in self._groups.iteritems():
+    for name, d in self._groups.items():
       dpull = d.pull()
       if len(dpull): result[name] = dpull
 
@@ -59,7 +59,7 @@ class ChangeTracker:
 
   def refresh(self):
     self._up_to_date.clear()
-    for name, d in self._groups.iteritems():
+    for name, d in self._groups.items():
       d.refresh()
 
   def _on_change(self, name):
@@ -119,7 +119,7 @@ class SyncedDict(Synced):
 
   def refresh(self):
     self._deleted.clear()
-    for v in self._values.itervalues(): v.refresh()
+    for v in self._values.values(): v.refresh()
     return self
 
   def keys(self):
@@ -127,7 +127,7 @@ class SyncedDict(Synced):
 
   def up_to_date(self):
     return len(self._deleted) == 0 and \
-           all(v.up_to_date() for v in self._values.itervalues())
+           all(v.up_to_date() for v in self._values.values())
 
   def get(self, key):
     return self._values.get(key)

@@ -87,17 +87,17 @@ class Nested(object):
     return all(self.offsets==other.offsets) and all(self.flat==other.flat)
 
   def __str__(self):
-    return str([list(self[i]) for i in xrange(len(self))])
+    return str([list(self[i]) for i in range(len(self))])
 
   def __repr__(self):
-    return 'Nested(%s)'%repr([list(self[i]) for i in xrange(len(self))])
+    return 'Nested(%s)'%repr([list(self[i]) for i in range(len(self))])
 
   def sizes(self):
     return self.offsets[1:]-self.offsets[:-1]
 
   @staticmethod
   def concatenate(*args):
-    args = map(Nested,args)
+    args = list(map(Nested,args))
     if len(args)<=1:
       return args[0]
     self = object.__new__(Nested)

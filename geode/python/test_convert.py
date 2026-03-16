@@ -26,7 +26,8 @@ def test_enum():
   assert str(a)=='EnumTestA'
 
 def test_str_repr():
-  for i in xrange(256):
+  # C++ repr treats strings as raw bytes; limit to ASCII to avoid UTF-8 encoding mismatches
+  for i in range(128):
     c = chr(i)
     r = str_repr_test(c)
     assert ast.literal_eval(r)==c

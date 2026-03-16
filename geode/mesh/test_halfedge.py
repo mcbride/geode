@@ -131,7 +131,7 @@ def construction_test(Mesh,random_edge_flips=random_edge_flips,random_face_split
     # check face insertion one by one
     check_add_face(base,soup.elements)
 
-    for key in xrange(5):
+    for key in range(5):
       # Mangle the clean mesh using a bunch of edge flips
       mesh = base.copy()
       flips = random_edge_flips(mesh,1000,key)

@@ -25,7 +25,7 @@ def test_sobol(filename=None):
 
   if filename:
     Image.write(filename,im.astype(real))
-  hash = hashlib.sha1(im.tostring()).hexdigest()
+  hash = hashlib.sha1(im.tobytes()).hexdigest()
   expected = '9b80b2a496d0bf4e5aeb001a87fd64528b712784'
   assert hash==expected
 
@@ -59,10 +59,10 @@ def test_threefry():
            243f6a8885a308d3 13198a2e03707344   0000000000000000 8000000000000000   58af89abe6d07cab 12e1901ad854ba14
            a4093822299f31d0 082efa98ec4e6c89   0000000000000000 8000000000000000   469ded4657b380b5 4e18d924d1d191f4
            452821e638d01377 be5466cf34e90c6c   0000000000000000 8000000000000000   89983220cc01af30 756813c51f68660f'''
-  kat = map(lambda s:int(s,16),kat.split())
+  kat = list(map(lambda s:int(s,16),kat.split()))
   def combine(lo,hi):
     return (hi<<64)+lo
-  for i in xrange(len(kat)//6):
+  for i in range(len(kat)//6):
     ctr = combine(kat[6*i+0],kat[6*i+1])
     key = combine(kat[6*i+2],kat[6*i+3])
     val = combine(kat[6*i+4],kat[6*i+5])
@@ -122,7 +122,7 @@ def test_permute():
   numpy.random.seed(7810131)
   for n in 1025,14710134,2**32,2**32+1,2**64-1:
     key = threefry(18371,n)
-    xs = numpy.fromstring(numpy.random.bytes(8*16),dtype=uint64)%n
+    xs = numpy.frombuffer(numpy.random.bytes(8*16),dtype=uint64)%n
     for x in xs:
       y = random_permute(n,key,x)
       assert x==random_unpermute(n,key,y)
@@ -132,8 +132,8 @@ def test_permute():
   for n in 1,2,3,4,5:
     fac *= n
     perms = set()
-    for key in xrange(int(1+10*fac*log(fac))):
-      perm = tuple(random_permute(n,key,i) for i in xrange(n))
+    for key in range(int(1+10*fac*log(fac))):
+      perm = tuple(random_permute(n,key,i) for i in range(n))
       for i,pi in enumerate(perm):
         assert i==random_unpermute(n,key,pi)
       perms.add(perm)

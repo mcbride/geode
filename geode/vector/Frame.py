@@ -57,7 +57,10 @@ class Frames(ndarray):
 
     d_to_size = {2:4,3:7}
     def reals(self):
-        return (frombuffer(self.data,real) if self.data else empty(0,real)).reshape(self.shape+(self.d_to_size[self.d],))
+        a = self.view(ndarray)
+        if a.ndim == 0:
+            a = a.reshape(1)
+        return a.view(real).reshape(self.shape+(self.d_to_size[self.d],))
 
     def inverse(self):
       ri = self.r.inverse()
@@ -87,7 +90,7 @@ def interpolation(f1,f2,s):
   interp = frame_interpolation_2d if f1.d==2 else frame_interpolation_3d
   if f1.shape!=f2.shape:
     b = broadcast(f1,f2)
-    new_f = [empty(b.shape,dtype=f1.dtype).view(Frames) for _ in xrange(2)]
+    new_f = [empty(b.shape,dtype=f1.dtype).view(Frames) for _ in range(2)]
     new_f[0][:] = f1
     new_f[1][:] = f2
     f1,f2 = new_f

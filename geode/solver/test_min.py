@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import division
+import builtins
 from geode import *
 from geode.solver import nelder_mead
 from numpy import *
@@ -15,13 +16,13 @@ def test_brent():
 
 def test_bracket():
   random.seed(8523815)
-  for _ in xrange(20):
+  for _ in range(20):
     co = 5*random.randn(4)
     def f(x):
       return co[0]+x*(co[1]+x*(co[2]+x*(co[3]+x)))
     (a,b,c),(fa,fb,fc) = bracket(f,0,.1*random.randn())
     assert a<b<c
-    assert fb<min(fa,fc)
+    assert fb<builtins.min(fa,fc)
     assert allclose(fa,f(a))
     assert allclose(fb,f(b))
     assert allclose(fc,f(c))

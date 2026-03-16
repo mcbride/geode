@@ -35,13 +35,13 @@ def test_incident_segments():
   incident = mesh.incident_elements()
   print(incident.offsets)
   print(incident.flat)
-  incident = map(list,mesh.incident_elements())
+  incident = list(map(list,mesh.incident_elements()))
   assert incident==[[0,1],[0],[1]]
 
 def test_incident_triangles():
   mesh = TriangleSoup([(0,1,2),(0,3,4)])
   incident =  mesh.incident_elements()
-  incident = map(list,incident)
+  incident = list(map(list,incident))
   assert incident==[[0,1],[0],[0],[1],[1]]
 
 def test_boundary_mesh():
@@ -85,13 +85,13 @@ def test_polygons():
     p = asarray(p)
     i = argmin(p)
     return tuple(hstack([p[i:],p[:i]]))
-  for _ in xrange(4):
+  for _ in range(4):
     inj = injection(11)
     segs = inj[segments]
     random.shuffle(segs)
     closed2,open2 = SegmentSoup(segs).polygons()
-    assert sorted(map(closed_key,closed2))==sorted(closed_key(inj[p]) for p in closed)
-    assert sorted(map(tuple,open2))==sorted(tuple(inj[p]) for p in open)
+    assert sorted(map(closed_key,closed2))==sorted([closed_key(inj[p]) for p in closed])
+    assert sorted(map(tuple,open2))==sorted([tuple(inj[p]) for p in open])
 
 def test_volume():
   mesh,X = icosahedron_mesh()
@@ -108,20 +108,20 @@ def test_neighbors():
 
 def injection(n):
   while 1:
-    map = random.randint(5,5+n*n,n).astype(int32)
-    if len(unique(map))==len(map):
-      return map
+    perm = random.randint(5,5+n*n,n).astype(int32)
+    if len(unique(perm))==len(perm):
+      return perm
 
 def test_nonmanifold_segments():
   random.seed(71318)
-  map = injection(12)
-  mesh = SegmentSoup(map[asarray([(0,0), # degenerate segment
-                                  (1,2),(3,4), # open curve
-                                  (4,5),(4,6), # two outgoing segments
-                                  (8,7),(9,7), # two incoming segments
-                                  (10,11),(11,10)],int32)]) # closed loop
-  assert all(mesh.nonmanifold_nodes(False)==sort(map[asarray(xrange(10))]))
-  assert all(mesh.nonmanifold_nodes(True)==sort(map[asarray([0,4,7])]))
+  perm = injection(12)
+  mesh = SegmentSoup(perm[asarray([(0,0), # degenerate segment
+                                   (1,2),(3,4), # open curve
+                                   (4,5),(4,6), # two outgoing segments
+                                   (8,7),(9,7), # two incoming segments
+                                   (10,11),(11,10)],int32)]) # closed loop
+  assert all(mesh.nonmanifold_nodes(False)==sort(perm[asarray(list(range(10)))]))
+  assert all(mesh.nonmanifold_nodes(True)==sort(perm[asarray([0,4,7])]))
 
 def test_nonmanifold_triangles():
   random.seed(71318)
@@ -132,16 +132,16 @@ def test_nonmanifold_triangles():
                      (17,18,19),(17,19,18),(17,20,21),(17,21,20), # touching spheres
                      (22,23,24),(22,25,26), # touching triangles
                      (27,28,29),(27,29,28)],int32) # manifold sphere
-  closed = asarray(range(18)+range(22,27))
-  open = asarray(range(6)+[14,15,17,22])
-  for _ in xrange(5):
+  closed = asarray(list(range(18))+list(range(22,27)))
+  open = asarray(list(range(6))+[14,15,17,22])
+  for _ in range(5):
     # Results should be covariant under sparsity and permutation
-    map = injection(30)
-    tris = map[triangles]
+    perm = injection(30)
+    tris = perm[triangles]
     # Results should be invariant under cyclic permutation of triangles
     s = random.randint(3,size=len(tris)).reshape(-1,1)
     tris = hstack([tris,tris])[arange(len(tris)).reshape(-1,1),hstack([s,s+1,s+2])]
     # Are we good?
     mesh = TriangleSoup(ascontiguousarray(tris))
-    assert all(mesh.nonmanifold_nodes(False)==sort(map[closed]))
-    assert all(mesh.nonmanifold_nodes(True)==sort(map[open]))
+    assert all(mesh.nonmanifold_nodes(False)==sort(perm[closed]))
+    assert all(mesh.nonmanifold_nodes(True)==sort(perm[open]))

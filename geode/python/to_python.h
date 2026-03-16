@@ -78,7 +78,7 @@ static inline PyObject* to_python(const char* value) {
 }
 
 static inline PyObject* to_python(const string& value) {
-  return PyUnicode_FromStringAndSize(value.c_str(),(Py_ssize_t)value.size());
+  return PyUnicode_DecodeLatin1(value.c_str(),(Py_ssize_t)value.size(),NULL);
 }
 
 // uint8_t is a valuable small integer type to use, and we believe most

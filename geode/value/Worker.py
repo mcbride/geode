@@ -164,7 +164,7 @@ class Worker(object):
       # See http://stackoverflow.com/questions/1238349/python-multiprocessing-exit-error for why we need this try block.
       try:
         self.worker_join(timeout)
-      except OSError,e:
+      except OSError as e:
         if e.errno != errno.EINTR:
           raise
     if self.debug:

@@ -60,16 +60,13 @@ uint128_t FromPython<uint128_t>::convert(PyObject* object) {
   PyObject* phi = PyNumber_Rshift(n,p64);
   Py_DECREF(n);
   if (!phi) throw_python_error();
-  uint64_t hi;
-  if (PyLong_Check(phi)) {
-    long shi = PyLong_AsLong(phi);
-    if (shi < 0) {
-      hi = -1;
-      PyErr_SetString(PyExc_OverflowError,"can't convert negative number to uint128_t");
-    } else
-      hi = shi;
-  } else
-    hi = PyLong_AsUnsignedLongLong(phi);
+  int sign = _PyLong_Sign(phi);
+  if (sign < 0) {
+    Py_DECREF(phi);
+    PyErr_SetString(PyExc_OverflowError,"can't convert negative number to uint128_t");
+    throw_python_error();
+  }
+  uint64_t hi = PyLong_AsUnsignedLongLong(phi);
   Py_DECREF(phi);
   if (hi==(uint64_t)-1 && PyErr_Occurred()) throw_python_error();
   return (uint128_t(hi)<<64)|lo;

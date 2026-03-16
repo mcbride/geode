@@ -4,16 +4,16 @@ from __future__ import absolute_import
 
 from numpy import *
 from geode import *
-import cPickle as pickle
+import pickle
 import sys
-import py
+import pytest
 
 def test_basic():
   a = empty_array()
   assert a.base is None
   assert all(a==array([]))
   assert a.base is None
-  b = array_test(array(xrange(5),dtype=int32),-1)
+  b = array_test(array(range(5),dtype=int32),-1)
   assert len(b)==5
 
 def test_resize():
@@ -44,11 +44,12 @@ def test_const():
   except ValueError:
     pass
 
+@pytest.mark.skipif(sys.version_info >= (3, 12), reason="deferred refcounting in Python 3.12+")
 def test_refcount():
   a = array([],dtype=int32)
   print(a.dtype.name)
   base = a
-  for i in xrange(100):
+  for i in range(100):
     a = array_test(a,-1)
     assert a.base is base
     assert sys.getrefcount(a)==2
@@ -56,7 +57,7 @@ def test_refcount():
 
 def test_mismatch():
   a = array([1.,2,3])
-  py.test.raises(TypeError,array_test,a,-1)
+  pytest.raises(TypeError,array_test,a,-1)
 
 def test_write(filename=None):
   random.seed(1731031)
@@ -68,7 +69,7 @@ def test_write(filename=None):
   assert size==data.nbytes
   data2 = load(filename)
   assert all(data==data2)
-  assert header.tostring()==open(filename).read(len(header))
+  assert header.tobytes()==open(filename,'rb').read(len(header))
 
 def test_nested():
   nested_test()

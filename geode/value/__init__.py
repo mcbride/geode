@@ -21,15 +21,13 @@ def Prop(name,default,shape=None):
 class cache_method(object):
   '''Decorator to cache a class method per instance.  The equivalent of 'cache' in the function case.'''
   def __init__(self,f):
-    self._name = '__'+f.__name__
+    self._name = '_cache_'+f.__name__
     self.f = f
   def __get__(self,instance,owner):
     try:
       return getattr(instance,self._name)
     except AttributeError:
-      if type(instance)==types.InstanceType:
-        raise TypeError('cache_method can only be used on new-style classes (must inherit from object)')
-      value = cache(types.MethodType(self.f,instance,owner))
+      value = cache(types.MethodType(self.f,instance))
       object.__setattr__(instance,self._name,value)
       return value
 

@@ -91,7 +91,7 @@ end_header
       if sha1 != binary[ext]:
         raise RuntimeError('sha1 mismatch: ext %s, expected %s, got %s'%(ext,binary[ext],sha1))
     else:
-      written =  open(f.name,'rb').read()
+      written =  open(f.name,'r').read()
       try:
         if ext=='.obj':
           assert written.split('\n')[6:]==ascii[ext].split('\n')[2:]

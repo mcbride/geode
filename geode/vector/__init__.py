@@ -8,6 +8,7 @@
 #######################################################################
 from __future__ import (division,absolute_import)
 
+import builtins
 import platform
 import numpy
 from numpy import *
@@ -172,7 +173,7 @@ def maxmag(array,axis=-1):
   return a.reshape(s[:axis]+s[axis:][1:])
 
 def relative_error(a,b,absolute=1e-30):
-  return maxabs(a-b)/max(maxabs(a),maxabs(b),absolute)
+  return maxabs(a-b)/builtins.max(maxabs(a),maxabs(b),absolute)
 
 def rotate_right_90(v):
   v = asarray(v)
@@ -192,7 +193,7 @@ def rotate_left_90(v):
 
 def ahash(*args):
   '''Hash the raw binary data in a numpy array'''
-  return hash(''.join(asarray(a).tostring() for a in args))
+  return hash(''.join(asarray(a).tobytes() for a in args))
 
 def homogeneous_times(A,b):
   y = Matrix(A[...,:-1])*b+A[...,-1]

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import absolute_import
+import builtins
 from geode import *
 
 def test_stencil():
@@ -18,7 +19,7 @@ def test_stencil():
           print("x[:,0] =", x[:,0])
         # Make sure the pattern makes sense
         diff = xo-x[:,0]
-        i = arange(min(m,r+1))
+        i = arange(builtins.min(m,r+1))
         assert all(diff[i]==-i)
         i = arange(r+1,m)
         assert all(diff[i]==-r)

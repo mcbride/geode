@@ -20,7 +20,7 @@ def remote(conn):
   done = Prop('done',False)
   conn.add_output('n',n)
   conn.add_output('done',done)
-  for i in xrange(10):
+  for i in range(10):
     n.set(i)
   done.set(True)
 

@@ -36,7 +36,7 @@ def draw_circle_arcs(arcs,n=100,label=False,full=False,dots=False,jitter=None):
           pylab.annotate(str(arcs.offsets[p]+i),center[i])
     else:
       if label:
-        for i in xrange(len(poly)):
+        for i in range(len(poly)):
           pylab.annotate(str(arcs.offsets[p]+i),points[i,n//2])
       points = concatenate([points.reshape(-1,2),[points[-1,-1]]])
       if jitter is not None:
@@ -139,7 +139,7 @@ def test_circles():
   k = 3
   plot_args = dict(full=False, label=True, dots=True)
   for n in 1,2,3,10,40,100:
-    for i in xrange({1:10,2:5,3:4,10:6,40:20,100:10}[n]):
+    for i in range({1:10,2:5,3:4,10:6,40:20,100:10}[n]):
       correct = known.get((k,n,i))
       if correct=='boring':
         continue

@@ -133,7 +133,7 @@ def parse(props,description,positional=[]):
   def converter(prop):
     try:
       v = prop()
-    except Exception,e:
+    except Exception as e:
       def fail(x):
         raise e
       return fail
