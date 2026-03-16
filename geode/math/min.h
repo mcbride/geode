@@ -6,7 +6,11 @@
 #include <geode/utility/config.h>
 #include <algorithm>
 #ifdef GEODE_SSE
+#if defined(GEODE_NEON)
+#include <geode/math/sse2neon.h>
+#else
 #include <xmmintrin.h>
+#endif
 #endif
 namespace geode {
 

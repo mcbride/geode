@@ -8,12 +8,16 @@
 #include <iostream>
 
 #ifdef GEODE_SSE
+#if defined(GEODE_NEON)
+#include <geode/math/sse2neon.h>
+#else
 #include <xmmintrin.h>
 #include <emmintrin.h>
 #include <immintrin.h>
 #ifdef GEODE_SSE4_1
 #include <smmintrin.h>
 #endif
+#endif // GEODE_NEON
 namespace geode {
 
 // Declaring these is legal on Windows, and they already exist for clang/gcc.

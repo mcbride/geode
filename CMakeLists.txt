@@ -14,15 +14,31 @@ find_package(PkgConfig)
 find_package(JPEG)
 find_package(PNG)
 
-find_library(
-  GMP_LIBRARIES gmp
-  HINTS /opt/homebrew/lib /usr/local/lib /usr/lib
-)
-find_path(
-  GMP_INCLUDE gmp.h
-  HINTS /opt/homebrew/include /usr/local/include /usr/include
-)
-if (GMP_LIBRARIES AND GMP_INCLUDE)
+# Detect Debian/Ubuntu multiarch library suffix
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+  set(_ARCH_LIB_SUFFIX "aarch64-linux-gnu")
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64")
+  set(_ARCH_LIB_SUFFIX "x86_64-linux-gnu")
+endif()
+
+# GMP: try pkg-config first, fall back to find_library
+find_library(GMP_LIBRARIES gmp
+  HINTS /opt/homebrew/lib /usr/local/lib
+        /usr/lib/${_ARCH_LIB_SUFFIX} /usr/lib64 /usr/lib)
+find_path(GMP_INCLUDE gmp.h
+  HINTS /opt/homebrew/include /usr/local/include
+        /usr/include/${_ARCH_LIB_SUFFIX} /usr/include)
+if(NOT GMP_LIBRARIES OR NOT GMP_INCLUDE)
+  # fall back to pkg-config for non-standard installs
+  if(PkgConfig_FOUND)
+    pkg_check_modules(GMP QUIET gmp)
+    if(GMP_FOUND)
+      find_library(GMP_LIBRARIES gmp HINTS ${GMP_LIBRARY_DIRS})
+      set(GMP_INCLUDE ${GMP_INCLUDE_DIRS})
+    endif()
+  endif()
+endif()
+if(GMP_LIBRARIES AND GMP_INCLUDE)
   set(GMP_FOUND TRUE)
 endif()
 
@@ -32,16 +48,16 @@ else()
   message(FATAL_ERROR "Required dependency GMP not found. Set GMP_LIB_DIR and GMP_INCLUDE_DIR to inform cmake where to look")
 endif()
 
-
-
 find_library(
   OPENMESH_LIBRARIES OpenMeshCore
   HINTS /opt/homebrew/lib /usr/local/lib /usr/local/lib/OpenMesh
+        /usr/lib/${_ARCH_LIB_SUFFIX}/OpenMesh /usr/lib64/OpenMesh /usr/lib/OpenMesh
 )
 
 find_path(
   OPENMESH_INCLUDE OpenMesh/Core/Mesh/TriMeshT.hh
-  HINTS /opt/homebrew/include /usr/local/include /usr/include
+  HINTS /opt/homebrew/include /usr/local/include
+        /usr/include/${_ARCH_LIB_SUFFIX} /usr/include
 )
 
 if (OPENMESH_LIBRARIES AND OPENMESH_INCLUDE)
@@ -51,7 +67,11 @@ endif()
 if (OPENMESH_FOUND)
   message(STATUS "OPENMESH found in ${OPENMESH_LIBRARIES}")
 else()
-  message(FATAL_ERROR "Required dependency OPENMESH not found. Set OPENMESH_LIB_DIR and OPENMESH_INCLUDE_DIR to inform cmake where to look")
+  message(WARNING
+    "OpenMesh not found -- the following functionality will be unavailable:\n"
+    "  TriMesh, decimate_openmesh, mean_curvatures, gaussian_curvatures,\n"
+    "  triangulate_face, visualize, floodfill\n"
+    "Install: brew install open-mesh (macOS) or apt install libopenmesh-dev (Ubuntu)")
 endif()
 
 

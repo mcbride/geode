@@ -163,8 +163,13 @@ typedef double real;
 
 #if defined(__x86_64__) || defined(__i386__) || defined(_M_X64) || defined(_M_IX86)
 #define GEODE_SSE
+#elif defined(GEODE_NEON)
+// sse2neon provides the full SSE API on ARM64 via NEON
+#define GEODE_SSE
+#define GEODE_SSE4_1
 #endif
-#if defined(GEODE_SSE)
+
+#if defined(GEODE_SSE) && !defined(GEODE_NEON)
   #ifdef _MSC_VER
     #ifdef _M_X64
     // 64 bit targets should always have SSE support

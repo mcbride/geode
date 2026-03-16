@@ -23,9 +23,6 @@
 #ifdef __APPLE__
 #include <mach/task.h>
 #include <mach/mach_init.h>
-#ifdef GEODE_SSE
-#include <xmmintrin.h>
-#endif
 #endif
 #if defined(__linux__)
 #include <unistd.h> // for getpagesize()
@@ -127,9 +124,35 @@ static void float_exception_handler(int sig_number, siginfo_t* info, void *data)
 }
 
 #ifdef __APPLE__
-#ifdef GEODE_SSE
+#if defined(GEODE_NEON)
 
-// feenableexcept and fedisableexcept are not defined, so define them
+// ARM64: control FP exceptions via FPCR register
+static uint64_t get_fpcr() {
+  uint64_t v; __asm__ volatile("mrs %0, fpcr" : "=r"(v)); return v;
+}
+static void set_fpcr(uint64_t v) {
+  __asm__ volatile("msr fpcr, %0" :: "r"(v));
+}
+static int fpcr_bits(int flags) {
+  int r = 0;
+  if (flags & FE_INVALID)   r |= (1 << 8);   // IDE
+  if (flags & FE_DIVBYZERO) r |= (1 << 9);   // DZE
+  if (flags & FE_OVERFLOW)  r |= (1 << 10);  // OFE
+  if (flags & FE_UNDERFLOW) r |= (1 << 11);  // UFE
+  if (flags & FE_INEXACT)   r |= (1 << 12);  // IXE
+  return r;
+}
+static void fedisableexcept(int flags) {
+  set_fpcr(get_fpcr() & ~(uint64_t)fpcr_bits(flags));
+}
+static void feenableexcept(int flags) {
+  set_fpcr(get_fpcr() | (uint64_t)fpcr_bits(flags));
+}
+
+#elif defined(GEODE_SSE)
+
+// x86: feenableexcept and fedisableexcept are not defined on macOS, so define them
+#include <xmmintrin.h>
 
 static int flags_to_mask(int flags) {
   int result=0;
@@ -149,7 +172,7 @@ static void feenableexcept(int flags) {
   _MM_SET_EXCEPTION_MASK(_MM_GET_EXCEPTION_MASK() & ~flags_to_mask(flags));
 }
 
-#else // No SSE
+#else // No SSE, no NEON
 
 static void fedisableexcept(int flags) { GEODE_NOT_IMPLEMENTED(); }
 static void feenableexcept(int flags) { GEODE_NOT_IMPLEMENTED(); }

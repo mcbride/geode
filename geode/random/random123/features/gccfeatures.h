@@ -147,7 +147,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #ifndef R123_USE_GNU_UINT128
-#ifdef __x86_64__
+#if defined(__x86_64__) || defined(__aarch64__)
 #define R123_USE_GNU_UINT128 1
 #else
 #define R123_USE_GNU_UINT128 0

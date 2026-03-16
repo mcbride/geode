@@ -1,5 +1,15 @@
 include(CheckCXXCompilerFlag)
 
+option(GEODE_NATIVE_ARCH "Compile with -march=native -mtune=native" ON)
+
+# ARM64 / NEON detection
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64" OR
+   (APPLE AND CMAKE_OSX_ARCHITECTURES MATCHES "arm64"))
+  set(GEODE_ARCH_ARM64 TRUE)
+  set(GEODE_NEON TRUE)
+  message(STATUS "ARM64 target detected -- NEON enabled")
+endif()
+
 # Workaround: on macOS with CommandLineTools, the toolchain's incomplete
 # c++/v1 directory can shadow the SDK's full headers. Detect and fix.
 if(APPLE)
@@ -92,6 +102,10 @@ macro(ADD_GEODE_MODULE _name)
         BUILDING_geode
     )
 
+    if(GEODE_NEON)
+      target_compile_definitions(${_name} PUBLIC GEODE_NEON)
+    endif()
+
     target_include_directories(
       ${_name}
       PUBLIC
@@ -107,11 +121,21 @@ macro(ADD_GEODE_MODULE _name)
       )
     endif()
 
+    if (JPEG_FOUND)
+      target_include_directories(${_name} PUBLIC ${JPEG_INCLUDE_DIR})
+    endif()
+
+    if (PNG_FOUND)
+      target_include_directories(${_name} PUBLIC ${PNG_INCLUDE_DIRS})
+    endif()
+
+    if(GEODE_NATIVE_ARCH AND NOT CMAKE_CROSSCOMPILING)
+      target_compile_options(${_name} PUBLIC -march=native -mtune=native)
+    endif()
+
     target_compile_options(
       ${_name}
       PUBLIC
-        -march=native
-        -mtune=native
         -O3
         -funroll-loops
         -Wall

@@ -1,0 +1,99 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 19 },
+
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "dev",
+      "displayName": "Development (native ARM64/x86, Python on)",
+      "description": "Local development build with -march=native and Python bindings",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "GEODE_NATIVE_ARCH": "ON",
+        "GEODE_DISABLE_PYTHON": "OFF",
+        "GEODE_REQUIRE_PYTHON": "ON"
+      }
+    },
+    {
+      "name": "dev-no-python",
+      "displayName": "Development (C++ only, no Python)",
+      "description": "Fast C++-only build for iterating on core library code",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "GEODE_NATIVE_ARCH": "ON",
+        "GEODE_DISABLE_PYTHON": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "displayName": "Release",
+      "description": "Optimised release build, native arch",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GEODE_NATIVE_ARCH": "ON",
+        "GEODE_DISABLE_PYTHON": "OFF",
+        "GEODE_REQUIRE_PYTHON": "ON"
+      }
+    },
+    {
+      "name": "ci",
+      "displayName": "CI",
+      "description": "CI build: portable binary (no -march=native), Python on, warnings treated as errors",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "GEODE_NATIVE_ARCH": "OFF",
+        "GEODE_DISABLE_PYTHON": "OFF"
+      }
+    }
+  ],
+
+  "buildPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "jobs": 0
+    },
+    {
+      "name": "dev-no-python",
+      "configurePreset": "dev-no-python",
+      "jobs": 0
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "jobs": 0
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "jobs": 0
+    }
+  ],
+
+  "testPresets": [
+    {
+      "name": "dev",
+      "configurePreset": "dev",
+      "output": { "shortProgress": true },
+      "execution": { "jobs": 1 }
+    },
+    {
+      "name": "ci",
+      "configurePreset": "ci",
+      "output": { "shortProgress": true, "verbosity": "verbose" },
+      "execution": { "jobs": 1 }
+    }
+  ]
+}
