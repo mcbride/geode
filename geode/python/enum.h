@@ -42,7 +42,7 @@ template<class E> class PyEnum : public Object {};
   public: \
     GEODE_DECLARE_TYPE(EXPORT GEODE_EMPTY()) /* Last bit dodges a Windows compiler bug */ \
     typedef Object Base; \
-    EXPORT static unordered_map<int,Ref<PyEnum>> values; \
+    EXPORT static unordered_map<int,Ref<PyEnum>>& values; \
     const char* name; \
     E value; \
   protected: \
@@ -59,7 +59,10 @@ template<class E> class PyEnum : public Object {};
     } \
   }; \
   \
-  unordered_map<int,Ref<PyEnum<E>>> PyEnum<E>::values; \
+  /* Heap-allocate so Ref destructors don't run during static destruction */ \
+  /* (Python objects are already finalized by then, causing segfaults) */ \
+  unordered_map<int,Ref<PyEnum<E>>>& PyEnum<E>::values = \
+    *new unordered_map<int,Ref<PyEnum<E>>>(); \
   \
   EXPORT PyObject* to_python(E value) { \
     auto it = PyEnum<E>::values.find(value); \

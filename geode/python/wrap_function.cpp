@@ -59,6 +59,7 @@ void wrap_python_function() {
 #ifdef GEODE_PYTHON
   if (PyType_Ready(&PythonFunction::pytype)<0)
     return;
+  Py_INCREF(&PythonFunction::pytype);
 #endif
 
   // PythonFunction can't be created from python, so no need to add it to the module

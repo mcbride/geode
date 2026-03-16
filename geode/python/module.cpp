@@ -4,10 +4,14 @@
 #include <geode/utility/config.h>
 #define GEODE_IMPORT_NUMPY
 #include <geode/python/module.h>
+#include <geode/python/Buffer.h>
 #include <geode/python/enum.h>
 #include <geode/python/numpy.h>
 #include <geode/python/stl.h>
 #include <geode/python/wrap.h>
+#ifndef _WIN32
+#include <dlfcn.h>
+#endif
 namespace geode {
 
 #ifdef GEODE_PYTHON
@@ -68,17 +72,30 @@ static void import_geode() {
 #endif
 }
 
+// Prevent libgeode from being dlclose'd during interpreter shutdown.
+// Static PyTypeObject instances live in the library's data segment;
+// if the library is unmapped while Python still holds references to
+// those types, _Py_Dealloc will segfault accessing invalid memory.
+static void prevent_unload() {
+#ifndef _WIN32
+  static bool done = false;
+  if (done) return;
+  done = true;
+  Dl_info info;
+  if (dladdr((void*)&prevent_unload, &info))
+    dlopen(info.dli_fname, RTLD_LAZY | RTLD_NODELETE);
+#endif
+}
+
 void module_push(const char* name) {
+  prevent_unload();
   static PyMethodDef no_methods[] = {{NULL, NULL, 0, NULL}};
-  static PyModuleDef module_def = {
-    PyModuleDef_HEAD_INIT,
-    NULL,   // m_name -- filled in below
-    NULL,   // m_doc
-    -1,     // m_size (-1 = module keeps state in global vars)
-    no_methods
+  // Each module needs its own PyModuleDef -- Python holds a pointer to it.
+  // Intentionally leaked (one per submodule, ~15 total).
+  auto* def = new PyModuleDef{
+    PyModuleDef_HEAD_INIT, name, NULL, -1, no_methods
   };
-  module_def.m_name = name;
-  auto module = PyModule_Create(&module_def);
+  auto module = PyModule_Create(def);
   if (!module)
     throw_python_error();
   // Register in sys.modules so other code can find this module
@@ -136,6 +153,11 @@ void wrap_python() {
     PyErr_Format(PyExc_ImportError,"python version mismatch: compiled again %s, linked against %s",PY_VERSION,Py_GetVersion());
     throw_python_error();
   }
+
+  // Initialize Buffer type (used for array ownership)
+  if (PyType_Ready(&Buffer::pytype) < 0)
+    throw_python_error();
+  Py_INCREF(&Buffer::pytype);
 
   GEODE_WRAP(object)
   GEODE_WRAP(python_function)

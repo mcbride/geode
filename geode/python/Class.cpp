@@ -51,6 +51,9 @@ ClassBase::ClassBase(const char* name,bool visible,PyTypeObject* type,ptrdiff_t 
   if (PyType_Ready(type)<0)
     throw_python_error();
 
+  // Static PyTypeObject must never reach refcount 0
+  Py_INCREF(type);
+
   // Prevent tp_new from inheriting, since the base tp_new constructs an instance of the base class
   type->tp_new = 0;
 
